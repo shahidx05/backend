@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const { Schema } = mongoose;
 async function main() {
-    await mongoose.connect(`mongodb+srv://shahidx05:2005%40Shahid@cluster0.rrnfc1t.mongodb.net/database`)
+    await mongoose.connect(process.env.MONGO_URI)
 
     const userSchema = new Schema({
         name: String,
