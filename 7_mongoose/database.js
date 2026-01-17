@@ -2,7 +2,7 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 
 async function main() {
-    await mongoose.connect()
+    await mongoose.connect(process.env.MONGO_URI)
 }
 
 module.exports = main
