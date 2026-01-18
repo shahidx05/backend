@@ -1,7 +1,9 @@
 const express = require('express')
+const bcrypt = require('bcrypt');
 const app = express()
 const main = require('./database')
 const User = require('./models/user')
+const validUser = require('./utils/validUser');
 const port = 3000
 
 app.use(express.json())
@@ -14,13 +16,39 @@ app.post('/register', async (req, res) => {
         //     }
         // });
 
-        const mandatoryField = ["firstName", "lastName", "email", "password"];
+        // OR
 
-        if (!IsAllowed) {
-            throw new Error(`Mandatory fields are missing: ${mandatoryField.join(", ")}`);
-        }
+        // const mandatoryField = ["firstName", "lastName", "email", "password"];
+        // const IsAllowed = mandatoryField.every(k => Object.keys(req.body).includes(k));
+        // if (!IsAllowed) {
+        //     throw new Error(`Mandatory fields are missing: ${mandatoryField.join(", ")}`);
+        // }
+
+        // OR
+
+        validUser(req.body);
+
+        req.body.password = await bcrypt.hash(req.body.password, 10);
+
         await User.create(req.body)
         res.send("user created successfully")
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+})
+
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new Error("Invalid email or password");
+        }   
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            throw new Error("Invalid email or password");
+        }
+        res.send("Login successful");
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -73,5 +101,3 @@ main()
         // console.log("All Users:", allUsers)
     })
     .catch((error) => console.log("error:", error))
-
-
