@@ -1,11 +1,15 @@
 const express = require('express')
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const app = express()
 const main = require('./database')
 const User = require('./models/user')
 const validUser = require('./utils/validUser');
+const userAuth = require('./middleware/userAuth');
+const cookieParser = require('cookie-parser');
 const port = 3000
 
+app.use(cookieParser());
 app.use(express.json())
 
 app.post('/register', async (req, res) => {
@@ -48,14 +52,22 @@ app.post('/login', async (req, res) => {
         if (!isMatch) {
             throw new Error("Invalid email or password");
         }
+
+        const token = jwt.sign({ id: user._id, email }, 'secret_key',{ expiresIn: '1h' });
+
+        res.cookie('token', token);
+
         res.send("Login successful");
     } catch (error) {
         res.status(500).send(error.message);
     }
 })
 
-app.get('/info', async (req, res) => {
+app.get('/info/all', async (req, res) => {
     try {
+        // const payload = jwt.verify(req.cookies.token, 'secret_key');
+        // console.log(payload);
+        
         const allUsers = await User.find({})
         res.send(allUsers)
     } catch (error) {
@@ -63,6 +75,23 @@ app.get('/info', async (req, res) => {
     }
 })
 
+app.get('/user', userAuth, async (req, res) => {
+    try {
+        // const {token} = req.cookies;
+        // if(!token) {
+        //     throw new Error("No token found");
+        // }
+        // const payload = jwt.verify(token, 'secret_key');
+        // console.log(payload);
+        // const user = await User.findById(payload.id)
+        // if(!user) {
+        //     throw new Error("No user found");
+        // }
+        res.send(req.user)
+    } catch (error) {
+        res.status(500).send("Error" + error.message);
+    }
+})
 app.get('/user/:id', async (req, res) => {
     try {
         const user = await User.findById(req.params.id)

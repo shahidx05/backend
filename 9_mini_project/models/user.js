@@ -46,6 +46,11 @@ const userSchema = new Schema({
     }
 }, {timestamps: true})
 
+userSchema.methods.FunctionName = function(){
+    // function body
+     
+}
+
 const User = mongoose.model("user", userSchema)
 
 module.exports = User 
