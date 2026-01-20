@@ -6,11 +6,17 @@ const main = require('./database')
 const User = require('./models/user')
 const validUser = require('./utils/validUser');
 const userAuth = require('./middleware/userAuth');
+const authRouter  = require("./routes/auth")
+const userRouter = require("./routes/user")
 const cookieParser = require('cookie-parser');
 const port = 3000
 
 app.use(cookieParser());
 app.use(express.json())
+
+app.use('/auth', authRouter);
+app.use('/user', userRouter);
+
 
 app.post('/register', async (req, res) => {
     try {
@@ -48,12 +54,14 @@ app.post('/login', async (req, res) => {
         if (!user) {
             throw new Error("Invalid email or password");
         }   
-        const isMatch = await bcrypt.compare(password, user.password);
+        // const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await user.verifyPassword(password);
         if (!isMatch) {
             throw new Error("Invalid email or password");
         }
 
-        const token = jwt.sign({ id: user._id, email }, 'secret_key',{ expiresIn: '1h' });
+        // const token = jwt.sign({ id: user._id, email }, 'secjwt.sign({ id: user._id, email }, 'secret_key',{ expiresIn: '1h' });ret_key',{ expiresIn: '1h' });
+        const token = user.getJWT();
 
         res.cookie('token', token);
 
@@ -74,6 +82,8 @@ app.get('/info/all', async (req, res) => {
         res.status(500).send("Error" + error.message);
     }
 })
+
+
 
 app.get('/user', userAuth, async (req, res) => {
     try {
